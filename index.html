@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Brainrot — Timers</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700;900&display=swap');
+
+    body { margin:0; background:#fff; color:#000; font-family:'Comic Neue', cursive, sans-serif; height:100vh; display:flex; justify-content:center; align-items:flex-start; padding-top:50px; }
+    .container { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
+    .top { text-align:center; font-size:72px; font-weight:900; padding:30px 0; }
+    .points { background: linear-gradient(90deg, #ff4fd8 0%, #7da0ff 50%, #c77dff 100%);
+              -webkit-background-clip: text; background-clip: text; color:transparent; font-size:100px; font-weight:900; letter-spacing:40px; line-height:1; text-align:center; }
+    .timer-value { font-size:24px;font-weight:800;color:#000; margin-top:0px; text-align:center; }
+    .autres { background: linear-gradient(90deg, #ff0000 0%, #000000 100%);
+               -webkit-background-clip: text; background-clip: text; color:transparent;
+               font-size:100px; font-weight:900; margin-top:10px; letter-spacing:5px; line-height:1; text-align:center; }
+    .pacific { color:#B0E0E6; font-size:100px; font-weight:900; margin-top:10px; letter-spacing:5px; line-height:1; text-align:center; }
+    .second-timer, .pacific-timer { font-size:24px;font-weight:800; margin-top:10px; color:#000; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">BRAINROT</div>
+    <div class="points">???</div>
+    <div id="pointsTimer" class="timer-value">—</div>
+    <div class="pacific">Pacific</div>
+    <div id="pacificTimer" class="pacific-timer">—</div>
+    <div class="autres">Autres</div>
+    <div id="secondTimer" class="second-timer">—</div>
+  </div>
+
+  <script>
+    const eventsSpec = [
+      {hour:2, minute:0, durationMinutes:20},
+      {hour:14, minute:0, durationMinutes:20}
+    ];
+
+    const repeatingEvent = { durationMinutes: 20, intervalMinutes: 160 };
+    let baseTime = new Date();
+    baseTime.setHours(21,30,0,0);
+
+    const pacificEvent = { durationMinutes:20, intervalMinutes:220 };
+    let pacificBase = new Date();
+    pacificBase.setHours(0,0,0,0);
+
+    function getNextEvent() {
+      const now = new Date();
+      let nextEvent = null;
+      for (const e of eventsSpec) {
+        let eventTime = new Date();
+        eventTime.setHours(e.hour, e.minute, 0, 0);
+        if (eventTime < now) { eventTime.setDate(eventTime.getDate() + 1); }
+        if (!nextEvent || eventTime < nextEvent.time) { nextEvent = {time: eventTime, duration: e.durationMinutes * 60 * 1000}; }
+      }
+      return nextEvent;
+    }
+
+    function formatRemaining(ms) {
+      if(ms <= 0) return '0s';
+      const total = Math.floor(ms/1000);
+      const h = Math.floor(total/3600);
+      const m = Math.floor((total%3600)/60);
+      const s = total%60;
+      if(h>0) return `${h}h ${m}m ${s}s`;
+      if(m>0) return `${m}m ${s}s`;
+      return `${s}s`;
+    }
+
+    function updateUI() {
+      const now = new Date();
+      const next = getNextEvent();
+      const timer = document.getElementById('pointsTimer');
+      if(now >= next.time && now < next.time.getTime() + next.duration) {
+        timer.textContent = `LIVE — ${formatRemaining(next.time.getTime() + next.duration - now.getTime())}`;
+      } else {
+        timer.textContent = `Dans: ${formatRemaining(next.time - now)}`;
+      }
+
+      const secondTimerEl = document.getElementById('secondTimer');
+      let tempBase = new Date(baseTime);
+      while(tempBase.getTime() + repeatingEvent.durationMinutes*60000 <= now.getTime()){
+        tempBase = new Date(tempBase.getTime() + repeatingEvent.intervalMinutes*60000);
+      }
+      if(now >= tempBase && now < tempBase.getTime() + repeatingEvent.durationMinutes*60000){
+        secondTimerEl.textContent = `LIVE — ${formatRemaining(tempBase.getTime() + repeatingEvent.durationMinutes*60000 - now.getTime())}`;
+      } else {
+        secondTimerEl.textContent = `Dans: ${formatRemaining(tempBase.getTime() - now.getTime())}`;
+      }
+
+      const pacificTimerEl = document.getElementById('pacificTimer');
+      let pacBase = new Date(pacificBase);
+      while(pacBase.getTime() + pacificEvent.durationMinutes*60000 <= now.getTime()){
+        pacBase = new Date(pacBase.getTime() + pacificEvent.intervalMinutes*60000);
+      }
+      pacBase = new Date(pacBase.getTime() + 2*60*60000);
+      if(now >= pacBase && now < pacBase.getTime() + pacificEvent.durationMinutes*60000){
+        pacificTimerEl.textContent = `LIVE — ${formatRemaining(pacBase.getTime() + pacificEvent.durationMinutes*60000 - now.getTime())}`;
+      } else {
+        pacificTimerEl.textContent = `Dans: ${formatRemaining(pacBase.getTime() - now.getTime())}`;
+      }
+    }
+
+    updateUI();
+    setInterval(updateUI,1000);
+  </script>
+</body>
+</html>
